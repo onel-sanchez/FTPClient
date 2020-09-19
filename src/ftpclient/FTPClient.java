@@ -5,6 +5,11 @@
  */
 package ftpclient;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+
 /**
  *
  * @author ceosa
@@ -14,8 +19,12 @@ public class FTPClient {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
-        // TODO code application logic here
+    public static void main(String[] args) throws IOException {
+        String serverName = "inet.cs.fiu.edu";
+        int port = 21;
+        ServerSocket socket = new ServerSocket(serverName, port);
+        InputStream in = socket.getInputStream();
+	OutputStream out = socket.getOutputStream();
     }
     
 }
