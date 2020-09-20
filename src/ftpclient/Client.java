@@ -18,15 +18,34 @@ public class Client {
     OutputStream out;
     PrintWriter sendToServer;
     String serverName;
+    String userName = "demo"; 
+    String password = "demopass";
 
     public Client(String serverName, int port) throws IOException {
         this.serverName = serverName;
         this.socket = new Socket(serverName, port);
         this.in = new DataInputStream(socket.getInputStream());;
         this.reader = new BufferedReader(new InputStreamReader(in));
+
         this.out = socket.getOutputStream();
         this.sendToServer = new PrintWriter(out, true);
     }
+    
+    public String authenticate(String userName, String password) throws IOException{
+        boolean authenticated = false;
+        sendToServer.print("USER "+ userName + "\n");
+        sendToServer.flush();
+        sendToServer.print("PASS " + password + "\n");
+        sendToServer.flush();
+        while(!authenticated){
+            String response = getResponse();
+            if(response.endsWith("230 Login successful.")){
+                authenticated = true;
+                return response;
+            }
+        }
+        return null;
+    } 
     
     public String getResponse() throws IOException{
         while(true){
@@ -44,7 +63,7 @@ public class Client {
         return sendToServer;
     }
     
-    public void sendRequest(String request){
+    public void sendRequest(String request) throws IOException{
         sendToServer.print(request);
         sendToServer.flush();
     }
