@@ -6,6 +6,7 @@
 package ftpclient;
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 import java.util.Scanner;
 /**
  *
@@ -50,9 +51,30 @@ public class Client {
     public String getResponse() throws IOException{
         while(true){
             String response = this.reader.readLine();
-            if(!response.isEmpty())
+            if(response!= null)
                 return response;
+            else
+                return null;
         }
+    }
+    
+    public ArrayList directory() throws IOException{
+        ArrayList<String> directory = new ArrayList<>();
+        String response = "";
+        boolean endOfDirectory = false;
+        while(!endOfDirectory){
+            response = getResponse();
+            if(response != null)
+                directory.add(response);
+            else
+                endOfDirectory = true;
+        }
+        return directory; 
+    }
+    
+    public void close() throws IOException{
+        this.reader.close();
+        this.socket.close();
     }
 
     public BufferedReader getReader() {
