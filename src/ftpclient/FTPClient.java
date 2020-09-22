@@ -46,13 +46,7 @@ public class FTPClient {
                 }
             }         
         }
-        client.sendRequest("PASV\n");
-        String response = client.getResponse();
-        if(response.startsWith("227")){
-            port = calculatePort(response);
-            dataConnection = new Client(client.getServerName(), port);
-            client.sendRequest("TYPE I\n");
-        }
+        
         boolean quit = false;
         while(!quit){
             System.out.print("myftp> ");
@@ -61,11 +55,11 @@ public class FTPClient {
             if(command.equalsIgnoreCase("quit")){
                 quit = true;
                 client.sendRequest("QUIT\n");
-                dataConnection.close();
                 client.close();
-                System.out.print("myftp> Good Bye!!");
+                System.out.print("myftp> Good Bye!!\n");
             }
             if(command.equalsIgnoreCase("ls")){
+                dataConnection = dataChannel(client);
                 client.sendRequest("NLST\n");
                 ArrayList<String> directory = dataConnection.directory();
                 System.out.println("myftp> List of Directories:");
@@ -74,21 +68,45 @@ public class FTPClient {
                 }
             }
             if(command.substring(0, 2).equalsIgnoreCase("cd ")){
+                if(client.cdCommand(command)==0)
+                    System.out.println("myftp> Directory successfully changed.");
+                else
+                    System.out.println("myftp> Failed to change directory.");
+            }
+            if(command.startsWith("delete ")){
+                if(client.deleteCommand(command)==0)
+                    System.out.println("myftp> Delete operation successful.");
+                else
+                    System.out.println("myftp> Delete operation failed.");
+            }
+            if(command.startsWith("get ")){
                 
             }
-            if(command.substring(0, 2).equalsIgnoreCase("get ")){
-                
-            }
-            if(command.substring(0, 2).equalsIgnoreCase("put ")){
-                
-            }
-            if(command.substring(0, 2).equalsIgnoreCase("delete ")){
-                
+            if(command.startsWith("put ")){
+                dataConnection = dataChannel(client);
+                client.putCommand(dataConnection, command);
             }
             
         }   
             
-    } 
+    }
+    
+    public static Client dataChannel(Client client) throws IOException{
+        client.sendRequest("PASV\n");
+        String response ="";
+        do{
+            response = client.getResponse();
+        }
+        while(!response.startsWith("227"));
+            if(response.startsWith("227")){
+                int port = calculatePort(response);
+                Client dataConnection = new Client(client.getServerName(), port);
+                client.sendRequest("TYPE I\n");
+                client.getResponse();
+                return dataConnection;
+            }
+        return null;
+    }
     
     public static int calculatePort(String pasvResponse){
         String csv = pasvResponse.substring(pasvResponse.indexOf("(")+1, pasvResponse.indexOf(")"));
