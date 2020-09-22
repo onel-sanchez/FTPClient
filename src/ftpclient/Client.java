@@ -6,8 +6,10 @@
 package ftpclient;
 import java.io.*;
 import java.net.*;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Scanner;
+import sun.misc.IOUtils;
 /**
  *
  * @author ceosa
@@ -21,6 +23,7 @@ public class Client {
     String serverName;
     String userName = "demo"; 
     String password = "demopass";
+    Client dataChannel = null;
 
     public Client(String serverName, int port) throws IOException {
         this.serverName = serverName;
@@ -92,6 +95,37 @@ public class Client {
 
     public String getServerName() {
         return serverName;
+    }
+    
+    public int cdCommand(String command) throws IOException{
+        sendRequest(command);
+        String response = getResponse();
+        if(response.startsWith("250"))
+            return 0;
+        return -1;
+    }
+    
+    public int deleteCommand(String command) throws IOException{
+        command = command.replaceFirst("delete", "DELE");
+        sendRequest(command + "\n");
+        String response = "";
+        do{
+            response = getResponse();
+        }
+        while(!response.startsWith("250") || !response.startsWith("550"));
+        if(response.startsWith("250"))
+            return 0;
+        return -1;
+    }
+    
+    public int putCommand(Client data, String command) throws IOException{
+        sendRequest("STOR " + command.substring(command.lastIndexOf("\\")+1) 
+                + "\n");
+        String inputFile = command.substring(4);
+        byte[] allBytes = Files.readAllBytes(Paths.get(inputFile));
+        data.out.write(allBytes);
+        data.close();
+        return 1;
     }
     
     
