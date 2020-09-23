@@ -33,16 +33,21 @@ public class FTPClient {
             client = new Client("inet.cs.fiu.edu", 21 );
             if(client.getResponse().startsWith("220")){
                 client.sendRequest("OPTS UTF8 ON\n");
+                client.getResponse();
                 System.out.println("myftp> Connecting to " + client.getServerName() + "...");
                 System.out.print("myftp> Username: ");
-                Scanner user = new Scanner(System.in);           
-                username = user.nextLine();
+                //Scanner user = new Scanner(System.in);           
+                //username = user.nextLine();
                 System.out.print("myftp> Password: ");
-                Scanner password = new Scanner(System.in);
-                pass = password.nextLine();
-                if(client.authenticate(username, pass).endsWith("230 Login successful.")){
+                //Scanner password = new Scanner(System.in);
+                //pass = password.nextLine();
+                if(client.authenticate("demo", "demopass").endsWith("230 Login successful.")){      
                     System.out.print("myftp> Login Successful.\n");
                     authenticated = true;
+                }
+                else{
+                    System.out.print("myftp> Login Incorrect.\n");
+                    client.close();
                 }
             }         
         }
@@ -61,13 +66,15 @@ public class FTPClient {
             if(command.equalsIgnoreCase("ls")){
                 dataConnection = dataChannel(client);
                 client.sendRequest("NLST\n");
+                client.getResponse();
                 ArrayList<String> directory = dataConnection.directory();
+                client.getResponse();
                 System.out.println("myftp> List of Directories:");
                 for (int i = 0; i < directory.size(); i++){
                     System.out.println(directory.get(i));
                 }
             }
-            if(command.substring(0, 2).equalsIgnoreCase("cd ")){
+            if(command.startsWith("cd ")){
                 if(client.cdCommand(command)==0)
                     System.out.println("myftp> Directory successfully changed.");
                 else
@@ -79,13 +86,16 @@ public class FTPClient {
                 else
                     System.out.println("myftp> Delete operation failed.");
             }
-            if(command.startsWith("get ")){
-                
-            }
             if(command.startsWith("put ")){
                 dataConnection = dataChannel(client);
                 client.putCommand(dataConnection, command);
+                dataConnection.close();
+                System.out.println("myftp> File Transfered.");
             }
+            if(command.startsWith("get ")){
+                
+            }
+            
             
         }   
             
