@@ -39,6 +39,7 @@ public class Client {
         boolean authenticated = false;
         sendToServer.print("USER "+ userName + "\n");
         sendToServer.flush();
+        getResponse();
         sendToServer.print("PASS " + password + "\n");
         sendToServer.flush();
         while(!authenticated){
@@ -47,6 +48,9 @@ public class Client {
                 authenticated = true;
                 return response;
             }
+            if(response.endsWith("530 Login incorrect."))
+                return response;
+            
         }
         return null;
     } 
@@ -98,7 +102,8 @@ public class Client {
     }
     
     public int cdCommand(String command) throws IOException{
-        sendRequest(command);
+        command = command.replaceFirst("cd", "CWD");
+        sendRequest(command + "\n");
         String response = getResponse();
         if(response.startsWith("250"))
             return 0;
@@ -108,11 +113,7 @@ public class Client {
     public int deleteCommand(String command) throws IOException{
         command = command.replaceFirst("delete", "DELE");
         sendRequest(command + "\n");
-        String response = "";
-        do{
-            response = getResponse();
-        }
-        while(!response.startsWith("250") || !response.startsWith("550"));
+        String response = getResponse();
         if(response.startsWith("250"))
             return 0;
         return -1;
@@ -121,10 +122,12 @@ public class Client {
     public int putCommand(Client data, String command) throws IOException{
         sendRequest("STOR " + command.substring(command.lastIndexOf("\\")+1) 
                 + "\n");
+        getResponse();
         String inputFile = command.substring(4);
         byte[] allBytes = Files.readAllBytes(Paths.get(inputFile));
         data.out.write(allBytes);
         data.close();
+        getResponse();
         return 1;
     }
     
