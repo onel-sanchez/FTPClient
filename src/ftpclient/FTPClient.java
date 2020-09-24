@@ -93,7 +93,12 @@ public class FTPClient {
                 System.out.println("myftp> File Transfered.");
             }
             if(command.startsWith("get ")){
-                
+                dataConnection = dataChannel(client);
+                if(client.getCommand(dataConnection, command)== -1)
+                    System.out.println("myftp> File Transfered failed. ");
+                else
+                    System.out.println("myftp> Transfer complete.");
+                dataConnection.close();
             }
             
             
