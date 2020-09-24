@@ -131,5 +131,24 @@ public class Client {
         return 1;
     }
     
+    public float getCommand(Client data, String command) throws IOException{
+        FileOutputStream fileWriter = new FileOutputStream(new File(command.substring(4)));
+        sendRequest(command.replaceFirst("get", "RETR") + "\n");
+        String response = getResponse();
+        if(response.startsWith("550"))
+            return -1;
+        else{
+            byte[] buffer = new byte[data.in.available()];
+           // while(data.in.available() != -1){
+            data.in.readFully(buffer);
+            fileWriter.write(buffer);
+            //}
+            data.close();
+            getResponse();
+            getResponse();
+            return 1;
+        }
+    }
+    
     
 }
