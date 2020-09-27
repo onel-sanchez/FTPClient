@@ -29,19 +29,30 @@ public class FTPClient {
         
         
         while(!authenticated){
-            System.out.println("myftp> Specify the Hostname:");
-            client = new Client("inet.cs.fiu.edu", 21 );
-            if(client.getResponse().startsWith("220")){
+            boolean connected = false;
+            System.out.print("myftp> Specify the Hostname: ");
+            Scanner server = new Scanner(System.in);
+            try {
+                client = new Client(server.nextLine(), 21);
+                connected = true;
+            }
+            catch (ConnectException e) {
+                System.out.println("myftp> Unable to establish connection. ");
+            }
+            catch (UnknownHostException e) {
+                System.out.println("myftp> Unknown Hostname. ");
+            }
+            if(connected && client.getResponse().startsWith("220")){
                 client.sendRequest("OPTS UTF8 ON\n");
                 client.getResponse();
                 System.out.println("myftp> Connecting to " + client.getServerName() + "...");
                 System.out.print("myftp> Username: ");
-                //Scanner user = new Scanner(System.in);           
-                //username = user.nextLine();
+                Scanner user = new Scanner(System.in);
+                username = user.nextLine();
                 System.out.print("myftp> Password: ");
-                //Scanner password = new Scanner(System.in);
-                //pass = password.nextLine();
-                if(client.authenticate("demo", "demopass").endsWith("230 Login successful.")){      
+                Scanner password = new Scanner(System.in);
+                pass = password.nextLine();
+                if(client.authenticate(username, pass).endsWith("230 Login successful.")){
                     System.out.print("myftp> Login Successful.\n");
                     authenticated = true;
                 }
@@ -51,7 +62,7 @@ public class FTPClient {
                 }
             }         
         }
-        
+        boolean enteredCommand = false;
         boolean quit = false;
         while(!quit){
             System.out.print("myftp> ");
@@ -62,6 +73,7 @@ public class FTPClient {
                 client.sendRequest("QUIT\n");
                 client.close();
                 System.out.print("myftp> Good Bye!!\n");
+                enteredCommand = true;
             }
             if(command.equalsIgnoreCase("ls")){
                 dataConnection = dataChannel(client);
@@ -73,24 +85,28 @@ public class FTPClient {
                 for (int i = 0; i < directory.size(); i++){
                     System.out.println(directory.get(i));
                 }
+                enteredCommand = true;
             }
             if(command.startsWith("cd ")){
                 if(client.cdCommand(command)==0)
                     System.out.println("myftp> Directory successfully changed.");
                 else
                     System.out.println("myftp> Failed to change directory.");
+                enteredCommand = true;
             }
             if(command.startsWith("delete ")){
                 if(client.deleteCommand(command)==0)
                     System.out.println("myftp> Delete operation successful.");
                 else
                     System.out.println("myftp> Delete operation failed.");
+                enteredCommand = true;
             }
             if(command.startsWith("put ")){
                 dataConnection = dataChannel(client);
                 client.putCommand(dataConnection, command);
                 dataConnection.close();
                 System.out.println("myftp> File Transfered.");
+                enteredCommand = true;
             }
             if(command.startsWith("get ")){
                 dataConnection = dataChannel(client);
@@ -99,11 +115,12 @@ public class FTPClient {
                 else
                     System.out.println("myftp> Transfer complete.");
                 dataConnection.close();
+                enteredCommand = true;
             }
-            
-            
-        }   
-            
+            if(!enteredCommand){
+                System.out.println("myftp> Invalid Command.");
+            }
+        }
     }
     
     public static Client dataChannel(Client client) throws IOException{

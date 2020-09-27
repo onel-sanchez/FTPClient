@@ -8,8 +8,6 @@ import java.io.*;
 import java.net.*;
 import java.nio.file.*;
 import java.util.ArrayList;
-import java.util.Scanner;
-import sun.misc.IOUtils;
 /**
  *
  * @author ceosa
@@ -21,8 +19,8 @@ public class Client {
     OutputStream out;
     PrintWriter sendToServer;
     String serverName;
-    String userName = "demo"; 
-    String password = "demopass";
+    String userName = "";
+    String password = "";
     Client dataChannel = null;
 
     public Client(String serverName, int port) throws IOException {
@@ -131,24 +129,23 @@ public class Client {
         return 1;
     }
     
-    public float getCommand(Client data, String command) throws IOException{
-        FileOutputStream fileWriter = new FileOutputStream(new File(command.substring(4)));
-        sendRequest(command.replaceFirst("get", "RETR") + "\n");
+    public int getCommand(Client data, String command) throws IOException{
+
+        String request = command.replaceFirst("get", "RETR");
+        sendRequest(request + "\n");
         String response = getResponse();
         if(response.startsWith("550"))
             return -1;
         else{
+            FileOutputStream fileWriter = new FileOutputStream(new File(command.substring(4)));
+            response = response.substring(response.indexOf("(")+1, response.lastIndexOf(")"));
+            System.out.println("myftp> Downloading " + response + ".");
             byte[] buffer = new byte[data.in.available()];
-           // while(data.in.available() != -1){
             data.in.readFully(buffer);
             fileWriter.write(buffer);
-            //}
             data.close();
-            getResponse();
             getResponse();
             return 1;
         }
     }
-    
-    
 }
